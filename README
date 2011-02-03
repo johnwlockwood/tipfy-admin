@@ -1,0 +1,7 @@
+1. add this to your apps_installed in your tipfy project config.py
+2. run your app
+3. go to /tipadmin/ (http://localhost:8000/tipadmin/)
+
+this will create an admin for any classes inherited 
+from db.Model inside models.py 
+of apps in your apps_installed 

@@ -19,24 +19,24 @@ def get_rules(app):
     rules =[
         TipRule('/tipadmin/<appname>/<modelname>/<entity_key>/delete', \
             endpoint='tipadmin/app/model/entity/delete', \
-        handler='apps.admin.EntityDeleteHandler'),
+        handler='tipadmin.EntityDeleteHandler'),
             
         TipRule('/tipadmin/<appname>/<modelname>/<entity_key>/', 
             endpoint='tipadmin/app/model/readupdate', \
-        handler='apps.admin.EntityReadUpdateHandler'),
+        handler='tipadmin.EntityReadUpdateHandler'),
         
         TipRule('/tipadmin/<appname>/<modelname>/create', \
             endpoint='tipadmin/app/model/create', \
-        handler='apps.admin.EntityReadUpdateHandler'),
+        handler='tipadmin.EntityReadUpdateHandler'),
         
         TipRule('/tipadmin/<appname>/<modelname>/', \
             endpoint='tipadmin/app/model/list', \
-        handler='apps.admin.EntityListHandler'),
+        handler='tipadmin.EntityListHandler'),
         
         TipRule('/tipadmin/<appname>/', endpoint='tipadmin/app/list', \
-        handler='apps.admin.ModelListHandler'),
+        handler='tipadmin.ModelListHandler'),
         
         TipRule('/tipadmin/', endpoint='tipadmin', \
-        handler='apps.admin.AdminHandler')]
+        handler='tipadmin.AdminHandler')]
 
     return rules

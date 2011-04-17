@@ -159,8 +159,8 @@ class EntityReadUpdateHandler(BaseHandler):
             delete_form = "<form action='delete' method='post'> \
             <input type='submit' name='submit' value='Delete'></form>"
         
-        return Response("admin app %s, model %s<br>\n%s\n<br>%s"%(parent_url, \
-            model_name, rendered_form,delete_form))
+        return Response("admin app %s, model %s<br><hr>%s<hr><br>\n%s\n<br>%s"%(parent_url, \
+            model_name,entity, rendered_form,delete_form))
         
     def post(self, **kwargs):
         apps_installed = self.get_config('tipfy', 'apps_installed')

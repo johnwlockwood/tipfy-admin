@@ -34,34 +34,45 @@ class BaseHandler(RequestHandler, AppEngineAuthMixin, Jinja2Mixin):
     return self.render_response(template, **context)    
     
     
+def getModels(app_name,model_list):
+    app_models = None
+    try:
+        try:
+            app_models = import_string('%s.models' % app_name)
+        except (ImportError,AttributeError), e:
+            app_models = import_string('%s.model' % app_name)
+        model_names = dir(app_models)
+        for name in model_names:
+            try:
+                if issubclass(getattr(app_models,name),db.Model):
+                    model_list.append(name)
+            except TypeError, e:
+                pass
+    
+    except (ImportError,AttributeError), e:
+        logging.info("import error from both")
+        
+    return app_models
+    
 class EntityDeleteHandler(BaseHandler):
     def post(self, **kwargs):
+        allapps = []
         apps_installed = self.get_config('tipfy', 'apps_installed')
+        allapps.extend(apps_installed)
+        allapps.extend(self.get_config('tipfy', 'sys_apps'))
         app_name = kwargs.get('appname')
         model_name = kwargs.get('modelname')
         entity_key_str = kwargs.get('entity_key')
         logging.info("\nput called\n")
-        if not app_name in apps_installed:
+        if not app_name in allapps:
             self.abort(404)
             
         model_list = []
-        try:
-            app_models = import_string('%s.models' % app_name)
-            model_names = dir(app_models)
-            for name in model_names:
-                try:
-                    if issubclass(getattr(app_models,name),db.Model):
-                        model_list.append(name)
-                except TypeError, e:
-                    pass
-            
-        except ImportError, e:
-            pass
+        app_models = getModels(app_name,model_list)
         
-        except AttributeError, e:
-            pass
         
-        if not model_name in model_list:
+        
+        if not model_name in model_list or not app_models:
             self.abort(404)
             
         try:
@@ -108,32 +119,21 @@ class EntityReadUpdateHandler(BaseHandler):
     
     def get(self, **kwargs):
         """ edit entity """
+        allapps = []
         apps_installed = self.get_config('tipfy', 'apps_installed')
+        allapps.extend(apps_installed)
+        allapps.extend(self.get_config('tipfy', 'sys_apps'))
         app_name = kwargs.get('appname')
         model_name = kwargs.get('modelname')
         entity_key_str = kwargs.get('entity_key')
         
-        if not app_name in apps_installed:
+        if not app_name in allapps:
             self.abort(404)
             
         model_list = []
-        try:
-            app_models = import_string('%s.models' % app_name)
-            model_names = dir(app_models)
-            for name in model_names:
-                try:
-                    if issubclass(getattr(app_models,name),db.Model):
-                        model_list.append(name)
-                except TypeError, e:
-                    pass
-            
-        except ImportError, e:
-            pass
+        app_models = getModels(app_name,model_list)
         
-        except AttributeError, e:
-            pass
-        
-        if not model_name in model_list:
+        if not model_name in model_list or not app_models:
             self.abort(404)
             
             
@@ -163,32 +163,21 @@ class EntityReadUpdateHandler(BaseHandler):
             model_name,entity, rendered_form,delete_form))
         
     def post(self, **kwargs):
+        allapps = []
         apps_installed = self.get_config('tipfy', 'apps_installed')
+        allapps.extend(apps_installed)
+        allapps.extend(self.get_config('tipfy', 'sys_apps'))
         app_name = kwargs.get('appname')
         model_name = kwargs.get('modelname')
         entity_key_str = kwargs.get('entity_key')
         logging.info("\nput called\n")
-        if not app_name in apps_installed:
+        if not app_name in allapps:
             self.abort(404)
             
         model_list = []
-        try:
-            app_models = import_string('%s.models' % app_name)
-            model_names = dir(app_models)
-            for name in model_names:
-                try:
-                    if issubclass(getattr(app_models,name),db.Model):
-                        model_list.append(name)
-                except TypeError, e:
-                    pass
-            
-        except ImportError, e:
-            pass
+        app_models = getModels(app_name,model_list)
         
-        except AttributeError, e:
-            pass
-        
-        if not model_name in model_list:
+        if not model_name in model_list or not app_models:
             self.abort(404)
             
         theModel = getattr(app_models,model_name)
@@ -231,27 +220,16 @@ class ModelListHandler(BaseHandler):
     #@admin_required
     def get(self, **kwargs):
         app_name = kwargs.get('appname')
+        allapps = []
         apps_installed = self.get_config('tipfy', 'apps_installed')
+        allapps.extend(apps_installed)
+        allapps.extend(self.get_config('tipfy', 'sys_apps'))
         
-        if not app_name in apps_installed:
+        if not app_name in allapps:
             self.abort(404)
         #    
         model_list = []
-        try:
-            app_models = import_string('%s.models' % app_name)
-            model_names = dir(app_models)
-            for name in model_names:
-                try:
-                    if issubclass(getattr(app_models,name),db.Model):
-                        model_list.append(name)
-                except TypeError, e:
-                    pass
-            
-        except ImportError, e:
-            pass
-        
-        except AttributeError, e:
-            pass
+        app_models = getModels(app_name,model_list)
         
         urls = ["<a href=\""+url_for('tipadmin/app/model/list', \
         appname=app_name,modelname=model_name)+"\">"+model_name+"</a>" for model_name in model_list]
@@ -268,31 +246,20 @@ class EntityListHandler(BaseHandler):
         
     #@admin_required
     def get(self, **kwargs):
+        allapps = []
         apps_installed = self.get_config('tipfy', 'apps_installed')
+        allapps.extend(apps_installed)
+        allapps.extend(self.get_config('tipfy', 'sys_apps'))
         app_name = kwargs.get('appname')
         model_name = kwargs.get('modelname')
         
-        if not app_name in apps_installed:
+        if not app_name in allapps:
             self.abort(404)
             
         model_list = []
-        try:
-            app_models = import_string('%s.models' % app_name)
-            model_names = dir(app_models)
-            for name in model_names:
-                try:
-                    if issubclass(getattr(app_models,name),db.Model):
-                        model_list.append(name)
-                except TypeError, e:
-                    pass
-            
-        except ImportError, e:
-            pass
+        app_models = getModels(app_name,model_list)
         
-        except AttributeError, e:
-            pass
-        
-        if not model_name in model_list:
+        if not model_name in model_list or not app_models:
             self.abort(404)
         
         parent_url = "<a href=\""+url_for('tipadmin/app/list', \
@@ -303,21 +270,49 @@ class EntityListHandler(BaseHandler):
         
         #testEntity = theModel(path="/applications/fun/");
         #testEntity.put()
-        
+        start_cursor = self.request.args.get('sc')
+        orderby = self.request.args.get('ob')
         
         query = theModel.all()
+        if orderby:
+            query.order(orderby)
+            
+            
+        if not start_cursor:
+            entities = query.fetch(20)
+        else:
+            try:
+                query.with_cursor(start_cursor)
+                entities = query.fetch(20)
+            except datastore_errors.BadRequestError, e:
+                entities = query.fetch(20)
+        
+        if len(entities) == 20:
+            more_available = 1
+        else:
+            more_available = 0
+            
+        next_start_cursor = query.cursor()
+        
+        fetch_more_url = "<a href=\"%s?sc=%s&ob=%s\">Fetch More</a>"%( \
+            url_for('tipadmin/app/model/list', \
+        appname=app_name,modelname=model_name),next_start_cursor,orderby)
+        
         
         create_new_url = "<a href=\"%s\">New %s</a>"%( \
             url_for('tipadmin/app/model/create', \
                 appname=app_name,modelname=model_name),model_name)
         
         thelist = "<ul>\n"
-        for entity in query:
+        for entity in entities:
             entity_url = "<a href=\"%s\">%s</a>"%(url_for('tipadmin/app/model/readupdate', \
                 appname=app_name,modelname=model_name,entity_key=entity.key()),entity)
             thelist += "<li>%s</li>\n"%(entity_url)
             
         thelist += "</ul>\n"
+        
+        if more_available:
+            thelist += "<br>"+fetch_more_url
         
         
         
@@ -331,13 +326,16 @@ class AdminHandler(BaseHandler):
         return super(AdminHandler, self).__init__(*args, **kwargs)
         
     def get(self, **kwargs):
+        allapps = []
         apps_installed = self.get_config('tipfy', 'apps_installed')
+        allapps.extend(apps_installed)
+        allapps.extend(self.get_config('tipfy', 'sys_apps'))
         
         urls = ["<a href=\""+url_for('tipadmin/app/list', \
-        appname=app_name)+"\">"+app_name+"</a>" for app_name in apps_installed]
+        appname=app_name)+"\">"+app_name+"</a>" for app_name in allapps]
         #raise ValueError("blah")
         
         
-        return Response("apps: %s, urls: :%s"%(apps_installed,urls))
+        return Response("apps: %s, urls: :%s"%(allapps,urls))
         
         

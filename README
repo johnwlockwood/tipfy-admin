@@ -1,7 +1,48 @@
+This app works with Tipfy 0.6.x
+
 1. add this to your apps_installed in your tipfy project config.py
+	you may also add sys_apps to the config with the value ['tipfy.ext.auth']
+	this will add admin for tipfy User
 2. run your app
-3. go to /tipadmin/ (http://localhost:8000/tipadmin/)
+3. specify admin only access in app.yaml. add to the handlers:
+- url: /tipadmin/.*
+  script: main.py
+  login: admin
+
+4. run the dev_appserver and go to /tipadmin/ (http://localhost:8000/tipadmin/)
 
 this will create an admin for any classes inherited 
 from db.Model inside models.py 
 of apps in your apps_installed 
+
+here is an example config.py:
+
+config = {}
+
+# Configurations for the 'tipfy' module.
+config['tipfy'] = {
+    # Enable debugger. It will be loaded only in development.
+    'middleware': [
+        'tipfy.ext.debugger.DebuggerMiddleware',
+        'tipfy.ext.appstats.AppstatsMiddleware',
+        'tipfy.ext.session.SessionMiddleware',
+    ],
+    'apps_installed': [
+        'tipadmin',
+        'mysuperapp',
+    ],
+    'sys_apps':[
+        'tipfy.ext.auth',
+    ]
+}
+
+
+The entity list fetches batches of 20, and will show a 'Fetch More' link to page
+to the next set of entities, using datastore cursors.
+
+You can specify an order for the entity list by adding the query string argument
+'ob' to the url. example: 
+https://yourapp.appspot.com/tipadmin/mysuperapp/Item/?ob=-created
+where created is an indexed property of the Item model. You must load the 
+ordered url before you click the Fetch More link, because the cursor is only
+valid for the same query.

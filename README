@@ -1,5 +1,6 @@
-This app works with Tipfy 0.6.x
+This app works with Tipfy 1.01b
 
+1a. copy tipadmin to the 'app' directory
 1. add this to your apps_installed in your tipfy project config.py
 	you may also add sys_apps to the config with the value ['tipfy.ext.auth']
 	this will add admin for tipfy User
@@ -21,18 +22,12 @@ config = {}
 
 # Configurations for the 'tipfy' module.
 config['tipfy'] = {
-    # Enable debugger. It will be loaded only in development.
-    'middleware': [
-        'tipfy.ext.debugger.DebuggerMiddleware',
-        'tipfy.ext.appstats.AppstatsMiddleware',
-        'tipfy.ext.session.SessionMiddleware',
-    ],
     'apps_installed': [
         'tipadmin',
         'mysuperapp',
     ],
     'sys_apps':[
-        'tipfy.ext.auth',
+        'tipfy.appengine.auth',
     ]
 }
 

@@ -3,14 +3,12 @@ import os, logging, datetime
 from google.appengine.ext import db
 from google.appengine.ext import deferred
 
-from tipfy import (RequestHandler, RequestRedirect, Response, abort,
-    cached_property, redirect, url_for, render_json_response,import_string)
-from tipfy.ext.auth import AppEngineAuthMixin, login_required, user_required, admin_required
+from tipfy.handler import RequestHandler
+from tipfy.app import Request,Response,RequestContext,redirect
+from tipfy.routing import import_string
 
-from tipfy.ext.jinja2 import Jinja2Mixin, render_response, render_template
-from tipfy.ext.session import AllSessionMixins, SessionMiddleware
-from tipfy.ext.wtforms import Form, fields, validators
-import config 
+from tipfyext.wtforms import Form, fields, validators
+from tipfyext.jinja2 import Jinja2Mixin
 
 from wtforms.ext.appengine.db import ModelConverter, model_form
 
@@ -22,16 +20,16 @@ class HandlerHolder(object):
 
 
 
-class BaseHandler(RequestHandler, AppEngineAuthMixin, Jinja2Mixin):
+class BaseHandler(RequestHandler,Jinja2Mixin):
   def render_to_response(self, template_name, template_vals=None, theme=None):
     template = os.path.join("admin", template_name)
     context = {
-    'config': config
+    'config': self.app.config
     }
     if template_vals:
       context.update(template_vals)
 
-    return self.render_response(template, **context)    
+    return self.render_response(template, **context)
     
     
 def getModels(app_name,model_list):
@@ -57,9 +55,9 @@ def getModels(app_name,model_list):
 class EntityDeleteHandler(BaseHandler):
     def post(self, **kwargs):
         allapps = []
-        apps_installed = self.get_config('tipfy', 'apps_installed')
+        apps_installed = self.app.config['tipfy']['apps_installed']
         allapps.extend(apps_installed)
-        allapps.extend(self.get_config('tipfy', 'sys_apps'))
+        allapps.extend(self.app.config['tipfy']['sys_apps'])
         app_name = kwargs.get('appname')
         model_name = kwargs.get('modelname')
         entity_key_str = kwargs.get('entity_key')
@@ -85,10 +83,10 @@ class EntityDeleteHandler(BaseHandler):
         
         db.delete(entity_key)
             
-        location = url_for('tipadmin/app/model/list', \
+        location = self.url_for('tipadmin/app/model/list', \
             appname=app_name,modelname=model_name)
         
-        return RequestRedirect(location)
+        return redirect(location)
             
 
 
@@ -120,9 +118,9 @@ class EntityReadUpdateHandler(BaseHandler):
     def get(self, **kwargs):
         """ edit entity """
         allapps = []
-        apps_installed = self.get_config('tipfy', 'apps_installed')
+        apps_installed = self.app.config['tipfy']['apps_installed']
         allapps.extend(apps_installed)
-        allapps.extend(self.get_config('tipfy', 'sys_apps'))
+        allapps.extend(self.app.config['tipfy']['sys_apps'])
         app_name = kwargs.get('appname')
         model_name = kwargs.get('modelname')
         entity_key_str = kwargs.get('entity_key')
@@ -149,7 +147,7 @@ class EntityReadUpdateHandler(BaseHandler):
         
         #import gaepdb;gaepdb.set_trace()
         
-        parent_url = "<a href=\""+url_for('tipadmin/app/model/list', \
+        parent_url = "<a href=\""+self.url_for('tipadmin/app/model/list', \
         appname=app_name,modelname=model_name)+"\">"+model_name+"</a>"
         
         rendered_form = self.render_form(theModel,entity)
@@ -164,9 +162,9 @@ class EntityReadUpdateHandler(BaseHandler):
         
     def post(self, **kwargs):
         allapps = []
-        apps_installed = self.get_config('tipfy', 'apps_installed')
+        apps_installed = self.app.config['tipfy']['apps_installed']
         allapps.extend(apps_installed)
-        allapps.extend(self.get_config('tipfy', 'sys_apps'))
+        allapps.extend(self.app.config['tipfy']['sys_apps'])
         app_name = kwargs.get('appname')
         model_name = kwargs.get('modelname')
         entity_key_str = kwargs.get('entity_key')
@@ -200,10 +198,10 @@ class EntityReadUpdateHandler(BaseHandler):
             self.form.populate_obj(entity)
             entity.put()
             
-            location = url_for('tipadmin/app/model/list', \
+            location = self.url_for('tipadmin/app/model/list', \
                 appname=app_name,modelname=model_name)
             
-            return RequestRedirect(location)
+            return redirect(location)
             
         return self.get(**kwargs)
         
@@ -221,9 +219,9 @@ class ModelListHandler(BaseHandler):
     def get(self, **kwargs):
         app_name = kwargs.get('appname')
         allapps = []
-        apps_installed = self.get_config('tipfy', 'apps_installed')
+        apps_installed = self.app.config['tipfy']['apps_installed']
         allapps.extend(apps_installed)
-        allapps.extend(self.get_config('tipfy', 'sys_apps'))
+        allapps.extend(self.app.config['tipfy']['sys_apps'])
         
         if not app_name in allapps:
             self.abort(404)
@@ -231,10 +229,10 @@ class ModelListHandler(BaseHandler):
         model_list = []
         app_models = getModels(app_name,model_list)
         
-        urls = ["<a href=\""+url_for('tipadmin/app/model/list', \
+        urls = ["<a href=\""+self.url_for('tipadmin/app/model/list', \
         appname=app_name,modelname=model_name)+"\">"+model_name+"</a>" for model_name in model_list]
         #raise ValueError("blah")
-        parent_url = "<a href=\""+url_for('tipadmin')+"\">admin</a>"
+        parent_url = "<a href=\""+self.url_for('tipadmin')+"\">admin</a>"
         
         return Response("%s app %s, models: %s"%(parent_url,app_name,urls))
         
@@ -247,9 +245,9 @@ class EntityListHandler(BaseHandler):
     #@admin_required
     def get(self, **kwargs):
         allapps = []
-        apps_installed = self.get_config('tipfy', 'apps_installed')
+        apps_installed = self.app.config['tipfy']['apps_installed']
         allapps.extend(apps_installed)
-        allapps.extend(self.get_config('tipfy', 'sys_apps'))
+        allapps.extend(self.app.config['tipfy']['sys_apps'])
         app_name = kwargs.get('appname')
         model_name = kwargs.get('modelname')
         
@@ -262,7 +260,7 @@ class EntityListHandler(BaseHandler):
         if not model_name in model_list or not app_models:
             self.abort(404)
         
-        parent_url = "<a href=\""+url_for('tipadmin/app/list', \
+        parent_url = "<a href=\""+self.url_for('tipadmin/app/list', \
         appname=app_name)+"\">"+app_name+"</a>"
         
         #paged list of entities
@@ -295,17 +293,17 @@ class EntityListHandler(BaseHandler):
         next_start_cursor = query.cursor()
         
         fetch_more_url = "<a href=\"%s?sc=%s&ob=%s\">Fetch More</a>"%( \
-            url_for('tipadmin/app/model/list', \
+            self.url_for('tipadmin/app/model/list', \
         appname=app_name,modelname=model_name),next_start_cursor,orderby)
         
         
         create_new_url = "<a href=\"%s\">New %s</a>"%( \
-            url_for('tipadmin/app/model/create', \
+            self.url_for('tipadmin/app/model/create', \
                 appname=app_name,modelname=model_name),model_name)
         
         thelist = "<ul>\n"
         for entity in entities:
-            entity_url = "<a href=\"%s\">%s</a>"%(url_for('tipadmin/app/model/readupdate', \
+            entity_url = "<a href=\"%s\">%s</a>"%(self.url_for('tipadmin/app/model/readupdate', \
                 appname=app_name,modelname=model_name,entity_key=entity.key()),entity)
             thelist += "<li>%s</li>\n"%(entity_url)
             
@@ -327,13 +325,12 @@ class AdminHandler(BaseHandler):
         
     def get(self, **kwargs):
         allapps = []
-        apps_installed = self.get_config('tipfy', 'apps_installed')
+        apps_installed = self.app.config['tipfy']['apps_installed']
         allapps.extend(apps_installed)
-        allapps.extend(self.get_config('tipfy', 'sys_apps'))
+        allapps.extend(self.app.config['tipfy']['sys_apps'])
         
-        urls = ["<a href=\""+url_for('tipadmin/app/list', \
+        urls = ["<a href=\""+self.url_for('tipadmin/app/list', \
         appname=app_name)+"\">"+app_name+"</a>" for app_name in allapps]
-        #raise ValueError("blah")
         
         
         return Response("apps: %s, urls: :%s"%(allapps,urls))

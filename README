@@ -1,9 +1,11 @@
 This app works with Tipfy 1.01b
 
 1a. copy tipadmin to the 'app' directory
-1. add this to your apps_installed in your tipfy project config.py
+1b. add this to your apps_installed in your tipfy project config.py
 	you may also add sys_apps to the config with the value ['tipfy.ext.auth']
 	this will add admin for tipfy User
+1c. to the project's main urls.py add the get_rules function defined below
+1d. to the project's main.py add "import urls; urls.get_rules(app)" in the position shown below
 2. run your app
 3. specify admin only access in app.yaml. add to the handlers:
 - url: /tipadmin/.*
@@ -30,6 +32,33 @@ config['tipfy'] = {
         'tipfy.appengine.auth',
     ]
 }
+
+
+in your project's urls.py:
+
+# -*- coding: utf-8 -*-
+"""URL definitions."""
+from tipfy.routing import Rule, import_string
+
+
+rules = [
+]
+
+def get_rules(app):
+    for app_module in app.config['tipfy']['apps_installed']:
+        try:
+            # Load the urls module from the app and extend our rules.
+            app_rules = import_string('%s.urls' % app_module)
+            for rule in app_rules.rules:
+                app.router.add(rule)
+        except ImportError,e:
+            pass
+            
+in your projects's main.py:
+app = App(rules=urls.rules, config=config, debug=debug)
++import urls; urls.get_rules(app)
+enable_appstats(app)
+enable_jinja2_debugging()
 
 
 The entity list fetches batches of 20, and will show a 'Fetch More' link to page

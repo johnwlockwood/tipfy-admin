@@ -48,7 +48,7 @@ def getModels(app_name,model_list):
                 pass
     
     except (ImportError,AttributeError), e:
-        logging.info("import error from both")
+        logging.exception("import error from both: %s"%e)
         
     return app_models
     
@@ -222,7 +222,7 @@ class ModelListHandler(BaseHandler):
         apps_installed = self.app.config['tipfy']['apps_installed']
         allapps.extend(apps_installed)
         allapps.extend(self.app.config['tipfy']['sys_apps'])
-        
+        #import gaepdb;gaepdb.set_trace()
         if not app_name in allapps:
             self.abort(404)
         #    

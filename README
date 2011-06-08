@@ -1,18 +1,17 @@
 This app works with Tipfy 1.01b
 
-1a. copy tipadmin to the 'app' directory
-1b. add this to your apps_installed in your tipfy project config.py
+1. copy tipadmin to the 'app' directory
+2. add this to your apps_installed in your tipfy project config.py
 	you may also add sys_apps to the config with the value ['tipfy.ext.auth']
 	this will add admin for tipfy User
-1c. to the project's main urls.py add the get_rules function defined below
-1d. to the project's main.py add "import urls; urls.get_rules(app)" in the position shown below
-2. run your app
-3. specify admin only access in app.yaml. add to the handlers:
+3. to the project's main urls.py add the get_rules function defined below
+4. to the project's main.py add "import urls" then "urls.get_rules(app)" in the position shown below
+5. specify admin only access in app.yaml. add to the handlers:
 - url: /tipadmin/.*
   script: main.py
   login: admin
 
-4. run the dev_appserver and go to /tipadmin/ (http://localhost:8000/tipadmin/)
+6. run the dev_appserver and go to /tipadmin/ (http://localhost:8000/tipadmin/)
 
 this will create an admin for any classes inherited 
 from db.Model inside models.py 
@@ -55,8 +54,9 @@ def get_rules(app):
             pass
             
 in your projects's main.py:
+import urls
 app = App(rules=urls.rules, config=config, debug=debug)
-+import urls; urls.get_rules(app)
+urls.get_rules(app)
 enable_appstats(app)
 enable_jinja2_debugging()
 
